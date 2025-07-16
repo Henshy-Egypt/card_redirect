@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Redirecting...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: Arial; text-align: center; padding: 40px; }
+    .spinner { margin: 30px auto; width: 40px; height: 40px;
+      border: 4px solid #ccc; border-top: 4px solid #000;
+      border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <h2>جارٍ معالجة البطاقة...</h2>
+  <div class="spinner"></div>
+  <p>يرجى الانتظار...</p>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const clientSecret = params.get("client_secret");
+    if (!clientSecret) {
+      document.body.innerHTML = "<h3>❌ لا يوجد client_secret</h3>";
+    } else {
+      fetch("https://accept.paymob.com/api/acceptance/card_tokens", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer egy_sk_test_36d09ae84f8a44e5e8f2eb26339071e2753b8bd282dfc0474f68cc7fc83355b6"
+        },
+        body: JSON.stringify({ client_secret: clientSecret })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const token = data.token;
+        const brand = data.card_subtype || "unknown";
+        const last4 = data.pan_fragment || "****";
+        location.href = `henshy://app/payment/redirect?card_token=${token}&brand=${brand}&last4=${last4}`;
+      })
+      .catch(() => {
+        document.body.innerHTML = "<h3>❌ خطأ أثناء معالجة الكارت</h3>";
+      });
+    }
+  </script>
+</body>
+</html>
